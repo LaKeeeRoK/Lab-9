@@ -1,35 +1,63 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Best store!</title>
-    <script type="text/javascript" src="/static/update.js"></script>
-    <link href="static/store.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phonebook</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='store.css') }}">
 </head>
-
 <body>
-    <h1>Furniture store:</h1>
-    <h3>Add new product:</h3>
-    <form>
-        <div>
-            <input type="text" name="prod_name" id="prod_name">
-            <label for="prod_name">Product name</label>
-        </div>
-        <div>
-            <input type="number" name="price" id="price">
-            <label for="price">Price (rub.)</label>
-        </div>
-        <button onClick="addProduct()">Add</button>
+    <h1>Phonebook</h1>
+    <form id="addContactForm">
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="tel" id="phone" placeholder="Phone" required>
+        <button type="submit">Add Contact</button>
     </form>
-    <ul>
-        {% for product in products_list %}
-        <li>
-            <div>
-                <div>{{ product['prod_name'] }}</div>
-                <div>{{ product['price'] }} rub.</div>
-                <input value="{{product['id']}}" onChange="updateProd(this)" name="in_stock" type="checkbox" {% if product.in_stock %} checked {% endif %}>
-                <label for="in_stock">In stock</label>
-            </div>
-        </li>
+    <ul id="contactList">
+        {% for contact in contacts %}
+        <li>{{ contact.name }} - {{ contact.phone }}</li>
         {% endfor %}
     </ul>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#addContactForm').submit(function(event) {
+                event.preventDefault();
+                var name = $('#name').val();
+                var phone = $('#phone').val();
+                $.ajax({
+                    type: 'POST',
+                    url: '/add',
+                    contentType: 'application/json',
+                    data: JSON.stringify({'name': name, 'phone': phone}),
+                    success: function(data) {
+                        if (data.success) {
+                            $('#name').val('');
+                            $('#phone').val('');
+                            refreshContacts();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to add contact:', error);
+                    }
+                });
+            });
+
+            function refreshContacts() {
+                $.ajax({
+                    type: 'GET',
+                    url: '/',
+                    success: function(data) {
+                        $('#contactList').html(data);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Failed to refresh contacts:', error);
+                    }
+                });
+            }
+
+            refreshContacts();
+        });
+    </script>
 </body>
 </html>

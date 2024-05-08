@@ -1,22 +1,38 @@
-function updateProd(el) {
-    product_id = el.value
-    fetch('/in_stock/' + product_id, {
-        method: 'patch',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({'in_stock': el.checked})
-    })
-    console.log(product_id)
-}
+$(document).ready(function() {
+    $('#addContactForm').submit(function(event) {
+        event.preventDefault();
+        var name = $('#name').val();
+        var phone = $('#phone').val();
+        $.ajax({
+            type: 'POST',
+            url: '/add',
+            contentType: 'application/json',
+            data: JSON.stringify({'name': name, 'phone': phone}),
+            success: function(data) {
+                if (data.success) {
+                    $('#name').val('');
+                    $('#phone').val('');
+                    refreshContacts();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Failed to add contact:', error);
+            }
+        });
+    });
 
-function addProduct() {
-    let prodName = document.getElementById('prod_name').value
-    let price = document.getElementById('price').value
-    fetch('/add', {
-        method: 'post',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({'prod_name': prodName,
-                             'price': price,
-                             'in_stock': true})
-    })
-//    console.log("Add")
-}
+    function refreshContacts() {
+        $.ajax({
+            type: 'GET',
+            url: '/',
+            success: function(data) {
+                $('#contactList').html(data);
+            },
+            error: function(xhr, status, error) {
+                console.error('Failed to refresh contacts:', error);
+            }
+        });
+    }
+
+    refreshContacts();
+});
